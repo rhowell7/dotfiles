@@ -131,3 +131,29 @@ export PATH=$PATH:/usr/local/go/bin
 ### Editor ###
 export EDITOR="vim"
 
+# This function activates one of the virtualenvs created by tox and installs
+# current package there in development mode. Handy for working on python
+# packages that have tox testing.
+function toxenv {
+    env=$1
+    if [ "$env" == "" -a -d .tox/py35 ]; then
+        env=py35
+    fi
+    if [ "$env" == "" -a -d .tox/py27 ]; then
+        env=py27
+    fi
+    if [ ! -d ".tox/$env" ]; then
+        echo "No virtualenv found at .tox/$env"
+        return 1
+    fi
+    source ".tox/$env/bin/activate"
+    if [ -f setup.py ]; then
+        name=$(python setup.py --name)
+        pip uninstall -yq $name
+        python setup.py -q develop
+        echo "Activated $env and installed $name in development mode"
+    else
+        export PYTHONPATH=`pwd`
+        echo "Activated $env and set PYTHONPATH to $PYTHONPATH"
+    fi
+}
